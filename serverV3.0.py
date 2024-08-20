@@ -46,6 +46,20 @@ def log_connection(client_address):
     with open(CONNECTION_FILE, 'a') as f:
         f.write(f"{datetime.now()},{client_address[0]},{client_address[1]}\n")
 
+def get_server_info():
+    return "Server Info: Python Socket Server, version 1.0"
+
+def get_server_time():
+    return f"Server Time: {datetime.now()}"
+
+def get_server_status():
+    return "Server Status: Online. Active connections: 0"
+
+def list_users():
+    with open(USER_FILE, 'r') as f:
+        users = json.load(f)
+    return "Registered Users: " + ", ".join(users.keys()) if users else "No registered users."
+
 def handle_client(client_socket, client_address):
     log_connection(client_address)
     
@@ -83,11 +97,59 @@ def handle_client(client_socket, client_address):
             else:
                 client_socket.sendall("Invalid command. Use 'register' or 'auth'.".encode('utf-8'))
 
+        while True:
+            command = client_socket.recv(1024).decode('utf-8')
+            if not command:
+                break
+            
+            response = process_command(command)
+            client_socket.sendall(response.encode('utf-8'))
+
     except Exception as e:
         log_event(f"An error occurred: {e}")
         print(f"An error occurred: {e}")
     finally:
         client_socket.close()
+
+def process_command(command):
+    if command == "server_info":
+        return get_server_info()
+    
+    elif command == "server_time":
+        return get_server_time()
+    
+    elif command == "server_status":
+        return get_server_status()
+    
+    elif command == "logout":
+        return "Logged out. Please reconnect to login with a different account."
+    
+    elif command == "clear":
+        return "Command not supported on server. (For client-side terminal clearing, use 'clear' or 'cls')."
+    
+    elif command.startswith("message "):
+        try:
+            _, username, message = command.split(" ", 2)
+            return f"Message to {username}: {message}"
+        except ValueError:
+            return "Invalid message format. Use: message <username> <message>"
+
+    elif command == "list_users":
+        return list_users()
+
+    elif command == "help":
+        return ("Available commands:\n"
+                "1. server_info - Get server information\n"
+                "2. server_time - Get the current server time\n"
+                "3. server_status - Get the status of the server\n"
+                "4. logout - Log out of the current account\n"
+                "5. clear - Clear the client terminal screen (client-side)\n"
+                "6. message <username> <message> - Send a message to another user\n"
+                "7. list_users - List all registered users\n"
+                "8. help - Display this help message")
+
+    else:
+        return "Unknown command"
 
 def start_server():
     server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
