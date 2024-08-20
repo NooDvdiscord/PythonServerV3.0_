@@ -1,7 +1,11 @@
 import socket
+import os
 
 SERVER_HOST = '127.0.0.1'
 SERVER_PORT = 12345
+
+def clear_screen():
+    os.system('cls' if os.name == 'nt' else 'clear')
 
 def main():
     client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -32,6 +36,31 @@ def main():
             elif "Registration successful" in response:
                 print("Now please login using your credentials.")
             
+        while True:
+            command = input("Enter command: ").strip()
+            if not command:
+                continue
+            
+            if command == "clear":
+                clear_screen()
+                continue
+
+            client_socket.sendall(command.encode('utf-8'))
+
+            if command.startswith("download "):
+                filename = command[9:]
+                with open(filename, 'wb') as f:
+                    while True:
+                        file_data = client_socket.recv(1024)
+                        if not file_data:
+                            break
+                        f.write(file_data)
+                print("File downloaded successfully.")
+            
+            else:
+                response = client_socket.recv(1024).decode('utf-8')
+                print("Server response:", response)
+
     except Exception as e:
         print(f"An error occurred: {e}")
     finally:
