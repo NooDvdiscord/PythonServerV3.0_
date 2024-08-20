@@ -57,7 +57,18 @@ def main():
                 except FileNotFoundError:
                     print("File not found. Please check the file path.")
                 continue
-            
+
+            if command.startswith("download "):
+                filename = command[9:]
+                with open(filename, 'wb') as f:
+                    while True:
+                        file_data = client_socket.recv(1024)
+                        if not file_data:
+                            break
+                        f.write(file_data)
+                print("File downloaded successfully.")
+                continue
+
             client_socket.sendall(command.encode('utf-8'))
 
             response = client_socket.recv(1024).decode('utf-8')
