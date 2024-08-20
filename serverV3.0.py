@@ -8,10 +8,14 @@ SERVER_PORT = 12345
 USER_FILE = 'users.json'
 LOG_FILE = 'server.log'
 CONNECTION_FILE = 'connections.csv'
+UPLOAD_DIR = 'uploads/'  # Directory to save uploaded files
 
 if not os.path.isfile(USER_FILE):
     with open(USER_FILE, 'w') as f:
         json.dump({}, f)
+
+if not os.path.exists(UPLOAD_DIR):
+    os.makedirs(UPLOAD_DIR)
 
 def hash_password(password):
     return hashlib.sha256(password.encode('utf-8')).hexdigest()
@@ -80,7 +84,7 @@ def handle_client(client_socket, client_address):
                 except ValueError:
                     client_socket.sendall("Invalid registration format. Use: register <username> <password>".encode('utf-8'))
             
-            elif message.startswith("auth "):
+            elif message.startswith("login "):
                 try:
                     _, username, password = message.split(" ", 2)
                     if authenticate(username, password):
@@ -90,10 +94,10 @@ def handle_client(client_socket, client_address):
                     else:
                         client_socket.sendall("Authentication failed".encode('utf-8'))
                 except ValueError:
-                    client_socket.sendall("Invalid authentication format. Use: auth <username> <password>".encode('utf-8'))
+                    client_socket.sendall("Invalid authentication format. Use: login <username> <password>".encode('utf-8'))
             
             else:
-                client_socket.sendall("Invalid command. Use 'register' or 'auth'.".encode('utf-8'))
+                client_socket.sendall("Invalid command. Use 'register' or 'login'.".encode('utf-8'))
 
         while True:
             command = client_socket.recv(1024).decode('utf-8')
@@ -135,6 +139,20 @@ def process_command(command):
     elif command == "list_users":
         return list_users()
 
+    elif command.startswith("upload "):
+        try:
+            _, filename = command.split(" ", 1)
+            filepath = os.path.join(UPLOAD_DIR, filename)
+            with open(filepath, 'wb') as f:
+                while True:
+                    file_data = client_socket.recv(1024)
+                    if not file_data:
+                        break
+                    f.write(file_data)
+            return f"File '{filename}' uploaded successfully."
+        except ValueError:
+            return "Invalid upload format. Use: upload <filename>"
+
     elif command == "help":
         return ("Available commands:\n"
                 "1. server_info - Get server information\n"
@@ -144,7 +162,8 @@ def process_command(command):
                 "5. clear - Clear the client terminal screen (client-side)\n"
                 "6. message <username> <message> - Send a message to another user\n"
                 "7. list_users - List all registered users\n"
-                "8. help - Display this help message")
+                "8. upload <filename> - Upload a file to the server\n"
+                "9. help - Display this help message")
 
     else:
         return "Unknown command"
