@@ -46,13 +46,17 @@ def main():
 
             if command.startswith("upload "):
                 filename = command[7:]
-                with open(filename, 'rb') as f:
-                    while True:
-                        file_data = f.read(1024)
-                        if not file_data:
-                            break
-                        client_socket.sendall(file_data)
-                print("File uploaded successfully.")
+                try:
+                    with open(filename, 'rb') as f:
+                        while True:
+                            file_data = f.read(1024)
+                            if not file_data:
+                                break
+                            client_socket.sendall(file_data)
+                    print("File uploaded successfully.")
+                except FileNotFoundError:
+                    print("File not found. Please check the file path.")
+                continue
             
             client_socket.sendall(command.encode('utf-8'))
 
