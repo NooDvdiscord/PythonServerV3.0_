@@ -2,6 +2,7 @@ import socket
 import os
 SERVER_HOST = '127.0.0.1'
 SERVER_PORT = 12345
+
 def clear_screen():
     os.system('cls' if os.name == 'nt' else 'clear')
 
