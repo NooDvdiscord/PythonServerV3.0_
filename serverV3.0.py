@@ -3,8 +3,10 @@ import hashlib
 import json
 import os
 from datetime import datetime
+
 SERVER_HOST = '127.0.0.1'
 SERVER_PORT = 12345
+
 USER_FILE = 'users.json'
 LOG_FILE = 'server.log'
 CONNECTION_FILE = 'connections.csv'
