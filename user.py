@@ -1,5 +1,6 @@
 import socket
 import os
+
 SERVER_HOST = '127.0.0.1'
 SERVER_PORT = 12345
 
