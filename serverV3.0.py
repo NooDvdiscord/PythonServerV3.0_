@@ -153,6 +153,23 @@ def process_command(command, client_socket):
         except ValueError:
             return "Invalid upload format. Use: upload <filename>"
 
+    elif command.startswith("download "):
+        try:
+            _, filename = command.split(" ", 1)
+            filepath = os.path.join(UPLOAD_DIR, filename)
+            if os.path.exists(filepath):
+                with open(filepath, 'rb') as f:
+                    while True:
+                        file_data = f.read(1024)
+                        if not file_data:
+                            break
+                        client_socket.sendall(file_data)
+                return f"File '{filename}' downloaded successfully."
+            else:
+                return "File not found."
+        except ValueError:
+            return "Invalid download format. Use: download <filename>"
+
     elif command == "help":
         return ("Available commands:\n"
                 "1. server_info - Get server information\n"
@@ -163,7 +180,8 @@ def process_command(command, client_socket):
                 "6. message <username> <message> - Send a message to another user\n"
                 "7. list_users - List all registered users\n"
                 "8. upload <filename> - Upload a file to the server\n"
-                "9. help - Display this help message")
+                "9. download <filename> - Download a file from the server\n"
+                "10. help - Display this help message")
 
     else:
         return "Unknown command"
