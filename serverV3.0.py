@@ -8,7 +8,7 @@ SERVER_PORT = 12345
 USER_FILE = 'users.json'
 LOG_FILE = 'server.log'
 CONNECTION_FILE = 'connections.csv'
-UPLOAD_DIR = 'uploads/'  # Directory to save uploaded files
+UPLOAD_DIR = 'uploads/'
 
 if not os.path.isfile(USER_FILE):
     with open(USER_FILE, 'w') as f:
@@ -104,7 +104,7 @@ def handle_client(client_socket, client_address):
             if not command:
                 break
             
-            response = process_command(command)
+            response = process_command(command, client_socket)
             client_socket.sendall(response.encode('utf-8'))
 
     except Exception as e:
@@ -113,7 +113,7 @@ def handle_client(client_socket, client_address):
     finally:
         client_socket.close()
 
-def process_command(command):
+def process_command(command, client_socket):
     if command == "server_info":
         return get_server_info()
     
